@@ -18,6 +18,9 @@ var (
 	readP       = 0
 	writeP      = 0
 	readyQueue  = NewQueue()
+	lastWrite   = 0
+	lastRead    = 0
+	errorMsg    = ""
 )
 
 func Clear() {
@@ -67,8 +70,6 @@ func Continue() {
 
 		resumedProcess = fullBuffer.V()
 		if resumedProcess.PType == CONSUMER {
-			//ReadBuffer()
-			//emptyBuffer.V()
 			mutex.P(resumedProcess)
 		}
 	case CONSUMER:
@@ -81,8 +82,6 @@ func Continue() {
 
 		resumedProcess = emptyBuffer.V()
 		if resumedProcess.PType == PRODUCER {
-			//WriteBuffer(resumedProcess.Item)
-			//fullBuffer.V()
 			mutex.P(resumedProcess)
 		}
 	}
@@ -138,21 +137,34 @@ func PrintAll() {
 		}
 		fmt.Print("\n")
 	}
+	fmt.Printf("==================Log====================\n")
+	if lastWrite != 0 {
+		fmt.Printf("Producer put: %v\n", lastWrite)
+	}
+	if lastRead != 0 {
+		fmt.Printf("Comsumer got: %v\n", lastRead)
+	}
+	if lastWrite == 0 && lastRead == 0 {
+		fmt.Println("Empty")
+	}
 }
 
 func WriteBuffer(num int) {
 	buffer[writeP] = num
 	writeP = (writeP + 1) % len(buffer)
+	lastWrite = num
 }
 
 func ReadBuffer() (num int) {
 	num = buffer[readP]
 	buffer[readP] = 0
 	readP = (readP + 1) % len(buffer)
+	lastRead = num
 	return
 }
 
 func main() {
+	Clear()
 	fmt.Println("Simulation start")
 	// Init buffer
 	fmt.Println("Please input buffer size: ")
@@ -165,7 +177,11 @@ func main() {
 	mutex.Count = 1
 	// Start main loop
 	for choice != 'q' {
-		//Clear()
+		Clear()
+		if errorMsg != "" {
+			fmt.Println(errorMsg)
+			errorMsg = ""
+		}
 		PrintAll()
 		fmt.Println("p: Call Producer, c: Call Consumer, v: Continue, q: Exit")
 		fmt.Scanf("%c\n", &choice)
@@ -176,7 +192,8 @@ func main() {
 			Consumer()
 		case 'v':
 			if readyQueue.IsEmpty() {
-				fmt.Println("Error: No running process!")
+				errorMsg = "Error: No running process!"
+				lastRead, lastWrite = 0, 0
 				continue
 			}
 			Continue()
