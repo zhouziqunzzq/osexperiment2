@@ -69,7 +69,7 @@ func Continue() {
 		if resumedProcess.PType == CONSUMER {
 			//ReadBuffer()
 			//emptyBuffer.V()
-			readyQueue.Push(resumedProcess)
+			mutex.P(resumedProcess)
 		}
 	case CONSUMER:
 		ReadBuffer()
@@ -83,7 +83,7 @@ func Continue() {
 		if resumedProcess.PType == PRODUCER {
 			//WriteBuffer(resumedProcess.Item)
 			//fullBuffer.V()
-			readyQueue.Push(resumedProcess)
+			mutex.P(resumedProcess)
 		}
 	}
 }

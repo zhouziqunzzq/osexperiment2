@@ -16,9 +16,7 @@ func (s *Semaphore) P(process Process) bool {
 }
 
 func (s *Semaphore) V() Process {
-	if s.Count < 1 {
-		s.Count++
-	}
+	s.Count++
 	if s.Count <= 0 {
 		return s.Q.Pop().(Process)
 	}
